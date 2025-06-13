@@ -68,7 +68,7 @@ export default function TypesPage() {
         <h2 className="text-xl font-bold">Event Types</h2>
         <Button
           className="flex items-center gap-1"
-          onClick={() => router.push(`/${spaceId}/types/create`)}
+          onClick={() => router.push(`/${spaceId}/admin/types/create`)}
         >
           <Plus className="h-4 w-4" />
           <span className="hidden sm:inline">Add Event Type</span>
@@ -85,7 +85,7 @@ export default function TypesPage() {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline"
-                  onClick={() => router.push(`/${spaceId}/types/${eventType.id}/edit`)}
+                  onClick={() => router.push(`/${spaceId}/admin/types/${eventType.id}/edit`)}
                 >
                   <Edit2 className="h-4 w-4" />
                   <span className="hidden sm:inline">Edit</span>

@@ -106,7 +106,7 @@ export default function StudentsPage() {
           </Button>
           <Button
             className="flex items-center gap-1"
-            onClick={() => router.push(`/${spaceId}/students/create`)}
+            onClick={() => router.push(`/${spaceId}/admin/students/create`)}
           >
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Create Student</span>
@@ -181,7 +181,7 @@ export default function StudentsPage() {
                   size="sm"
                   className="flex items-center gap-1"
                   title="Info"
-                  onClick={() => router.push(`/${spaceId}/students/${student.id}`)}
+                  onClick={() => router.push(`/${spaceId}/admin/students/${student.id}`)}
                 >
                   <Info className="h-4 w-4" /> Details
                 </Button>
@@ -190,7 +190,7 @@ export default function StudentsPage() {
                   size="sm"
                   className="flex items-center gap-1"
                   title="Edit"
-                  onClick={() => router.push(`/${spaceId}/students/${student.id}/edit`)}
+                  onClick={() => router.push(`/${spaceId}/admin/students/${student.id}/edit`)}
                 >
                   <Pencil className="h-4 w-4" /> Edit
                 </Button>

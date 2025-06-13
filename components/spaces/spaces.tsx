@@ -29,7 +29,6 @@ export default function Spaces() {
     } finally {
       setLoading(false); // Set loading to false after fetching is done
     }
-
   }
 
   useEffect(() => {

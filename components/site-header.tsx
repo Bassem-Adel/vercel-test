@@ -15,7 +15,11 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { useSidebar } from "@/components/ui/sidebar"
 
-export function SiteHeader() {
+type SiteHeaderProps = {
+  headerName?: string
+}
+
+export function SiteHeader({ headerName }: SiteHeaderProps) {
   const { toggleSidebar } = useSidebar()
 
   return (
@@ -34,12 +38,12 @@ export function SiteHeader() {
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink href="#">
-                Building Your Application
+                {headerName || "Unkown"}
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+              <BreadcrumbPage>Students</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>

@@ -68,22 +68,19 @@ const AttendanceTab: React.FC = () => {
         return data;
     };
 
-  // Build a map of groupId to groupName for fast lookup
-  const groupMap = groups.reduce<Record<string, string>>((acc, group) => {
-    acc[group.id] = group.name
-    return acc
-  }, {})
+    // Build a map of groupId to groupName for fast lookup
+    const groupMap = groups.reduce<Record<string, string>>((acc, group) => {
+        acc[group.id] = group.name
+        return acc
+    }, {})
 
     const fetchEvents = async (): Promise<Event[] | null> => {
         const response = await fetch(`/api/events?spaceId=${spaceId}`);
         const data = await response.json();
-        console.log("Attendance date changed:", events);
         return (data);
     };
 
     useEffect(() => {
-        console.log("Attendance date changed:", attendanceDate);
-        console.log("Attendance events:", events);
         const filteredEvents = events.filter((event) => {
             const startDate = event.startDate ? new Date(event.startDate) : null;
             const endDate = event.endDate ? new Date(event.endDate) : null;
@@ -92,7 +89,6 @@ const AttendanceTab: React.FC = () => {
                 (!endDate || endDate >= attendanceDate)
             );
         });
-        console.log("Attendance filtered events:", filteredEvents);
         setAttendanceEvents(filteredEvents);
     }, [attendanceDate, events]);
 
@@ -210,7 +206,7 @@ const AttendanceTab: React.FC = () => {
                         ))}
                     </div>
 
-                    <div className="mt-8">
+                    {/* <div className="mt-8">
                         <h2 className="text-lg font-semibold mb-2">
                             Attendance Events on {attendanceDate.toDateString()}
                         </h2>
@@ -226,7 +222,7 @@ const AttendanceTab: React.FC = () => {
                                 </li>
                             ))}
                         </ul>
-                    </div>
+                    </div> */}
                 </>
             )}
 

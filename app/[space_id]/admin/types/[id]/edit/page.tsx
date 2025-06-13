@@ -86,7 +86,7 @@ export default function EditEventTypePage() {
       })
 
       if (res.ok) {
-        router.push(`/${spaceId}/types`)
+        router.push(`/${spaceId}/admin/types`)
       } else {
         const errorData = await res.json().catch(() => ({}))
         setError(errorData.message || "Failed to update event type")
