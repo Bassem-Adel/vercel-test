@@ -182,6 +182,7 @@ function getSidebarData(spaceId?: string) {
   ],
 };
 }
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   
   const params = useParams()
@@ -190,7 +191,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const data = getSidebarData(spaceId);
   return (
     <Sidebar
-      className="top-[--header-height] !h-[calc(100svh-var(--header-height))]"
+      className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"
       {...props}
     >
       <SidebarHeader>
@@ -202,7 +203,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <Command className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Acme Inc</span>
+                  <span className="truncate font-medium">Acme Inc</span>
                   <span className="truncate text-xs">Enterprise</span>
                 </div>
               </a>
