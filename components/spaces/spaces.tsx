@@ -37,9 +37,9 @@ export default function Spaces() {
   }, []);
 
   return (
-    // <div className="max-w-2xl mx-auto py-8 px-4">
-    <div className="flex-1 py-8 px-4">
-      <Card className="p-4">
+    <div className="max-w-6xl mx-auto py-8 px-4 w-full">
+    {/* <div className="flex-1 py-8 px-4"> */}
+      {/* <Card className="p-4"> */}
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-4">
             <CheckCircleIcon className="h-8 w-8 text-gray-500 dark:text-gray-400" />
@@ -77,7 +77,7 @@ export default function Spaces() {
             ))}
           </div>
         )}
-      </Card>
+      {/* </Card> */}
     </div>
   );
 }

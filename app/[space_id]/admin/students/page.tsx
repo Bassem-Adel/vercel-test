@@ -29,6 +29,7 @@ export default function StudentsPage() {
   const [filter, setFilter] = useState("")
   const [genderFilter, setGenderFilter] = useState("all")
   const [groupFilter, setGroupFilter] = useState("all")
+  const [showFilters, setShowFilters] = useState(false) // State to toggle filter visibility
 
   useEffect(() => {
     if (!spaceId) return
@@ -92,9 +93,30 @@ export default function StudentsPage() {
 
   return (
     <main className="max-w-6xl mx-auto py-8 px-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      {/* Title and Create Button */}
+      <div className="flex items-center justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold">Students</h1>
         <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            className="flex items-center gap-1"
+            onClick={() => setShowFilters(!showFilters)} // Toggle filter visibility
+          >
+            <Filter className="h-4 w-4" />
+            <span className="hidden sm:inline">Filters</span>
+          </Button>
+          <Button
+            className="flex items-center gap-1"
+            onClick={() => router.push(`/${spaceId}/students/create`)}
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Create Student</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      {showFilters && (
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1">
             <Filter className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
             <Input
@@ -126,14 +148,9 @@ export default function StudentsPage() {
               ))}
             </SelectContent>
           </Select>
-          <Button
-            className="flex items-center gap-1"
-            onClick={() => router.push(`/${spaceId}/students/create`)}
-          >
-            <Plus className="h-4 w-4" /> Create Student
-          </Button>
         </div>
-      </div>
+      )}
+
       {loading && <div>Loading...</div>}
       {error && <div className="text-red-500">{error}</div>}
       {!loading && !error && (
