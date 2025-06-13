@@ -41,7 +41,13 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
    Created a fresh Git repository to manage the project version control.
 
 2. **Set Up the Next.js Application**  
-   Ran the following command to scaffold a new Next.js project:  
+   Run the following command to scaffold a new Next.js project:  
    ```bash
    npx create-next-app@latest
    ```
+
+3. **follow the instructions from the below URL to apply auth**
+   https://supabase.com/docs/guides/auth/server-side/nextjs
+
+3. **follow the instructions from the below URL to apply auth**
+   https://medium.com/@nbryleibanez/building-a-simple-to-do-app-with-supabase-next-js-2984ce16926a
