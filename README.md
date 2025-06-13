@@ -51,3 +51,6 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 3. **follow the instructions from the below URL to apply auth**
    https://medium.com/@nbryleibanez/building-a-simple-to-do-app-with-supabase-next-js-2984ce16926a
+   
+   npx shadcn@latest add button card checkbox input label separator
+   npx shadcn@latest add avatar badge breadcrumb collapsible dialog dropdown-menu select sheet sidebar switch table tabs tooltip
