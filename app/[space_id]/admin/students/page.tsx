@@ -96,7 +96,7 @@ export default function StudentsPage() {
       {/* Title and Create Button */}
       <div className="flex items-center justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold">Students</h1>
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex gap-2">
           <Button
             className="flex items-center gap-1"
             onClick={() => setShowFilters(!showFilters)} // Toggle filter visibility

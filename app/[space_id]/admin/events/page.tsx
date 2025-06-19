@@ -1,14 +1,16 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Event, EventType } from "@/lib/db/schema"
+import { Info, Pencil, Trash2, Plus, Filter } from "lucide-react"
 
 export default function EventsPage() {
+  const router = useRouter()
   const params = useParams()
   const spaceId = params?.space_id as string
 
@@ -81,8 +83,21 @@ export default function EventsPage() {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Events</h2>
         <div className="flex gap-2">
-          <Button onClick={() => console.log("Add Event")}>Add Event</Button>
-          <Button onClick={() => setEventFilterModalOpen(true)}>Filter</Button>
+          <Button
+            className="flex items-center gap-1"
+            onClick={() => router.push(`/${spaceId}/admin/events/create`)}
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Add Event</span>
+          </Button>
+
+          <Button
+            className="flex items-center gap-1"
+            onClick={() => setEventFilterModalOpen(true)} // Toggle filter visibility
+          >
+            <Filter className="h-4 w-4" />
+            <span className="hidden sm:inline">Filter</span>
+          </Button>
         </div>
       </div>
       <ul>
@@ -93,8 +108,39 @@ export default function EventsPage() {
               <p className="text-sm text-gray-500">{event.startDate} - {event.endDate}</p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => console.log("Edit Event")}>Edit</Button>
-              <Button variant="destructive" onClick={() => { setDeleteId(event.id); setDeleteDialogOpen(true) }}>Delete</Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-1"
+                title="Info"
+                onClick={() => router.push(`/${spaceId}/admin/events/${event.id}`)}
+              >
+                <Info className="h-4 w-4" />
+                <span className="hidden sm:inline">Details</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-1"
+                title="Edit"
+                onClick={() => router.push(`/${spaceId}/admin/events/${event.id}/edit`)}
+              >
+                <Pencil className="h-4 w-4" />
+                <span className="hidden sm:inline">Edit</span>
+              </Button>
+
+              <Button
+                variant="destructive"
+                size="sm"
+                className="flex items-center gap-1"
+                title="Delete"
+                onClick={() => { setDeleteId(event.id); setDeleteDialogOpen(true) }}
+              // disabled={deleting}
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Delete</span>
+              </Button>
             </div>
           </li>
         ))}
