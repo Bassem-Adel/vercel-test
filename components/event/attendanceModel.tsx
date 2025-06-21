@@ -10,13 +10,15 @@ import { Student, Event, EventType, EventStudent } from "@/lib/db/schema"
 import { Edit } from "lucide-react" // Importing an icon from lucide-react
 
 interface AttendanceModelProps {
+    spaceId: string;
     student: Student;
     attendanceEvents: Event[];
     eventTypes: EventType[];
     onAttendanceUpdated: (student: Student, event: Event, attendanceStatus: boolean) => void;
 }
 
-const AttendanceModel: React.FC<AttendanceModelProps> = ({
+export const AttendanceModel: React.FC<AttendanceModelProps> = ({
+    spaceId,
     student,
     attendanceEvents,
     eventTypes,
@@ -49,9 +51,6 @@ const AttendanceModel: React.FC<AttendanceModelProps> = ({
         const balance = await fetchStudentBalance(student.id);
         const attendanceData = await fetchAttendanceByStudent(student.id);
 
-        let originalStatus: { [key: string]: boolean } = {};
-        let originalExtraPoints: { [key: string]: { [key: string]: number } } = {};
-
         for (let i = 0; i < attendanceEvents.length; i++) {
             const eventId = attendanceEvents[i].id;
             const eventAttendance = attendanceData.find(e => e.eventId === eventId);
@@ -73,13 +72,33 @@ const AttendanceModel: React.FC<AttendanceModelProps> = ({
     };
 
     const fetchStudentBalance = async (studentId: string): Promise<number> => {
-        // Replace with actual data fetching logic
-        return 100; // Dummy data
+        try {
+            const response = await fetch(`/api/studentAccount?spaceId=${spaceId}&studentId=${studentId}&handler=balance`)
+            if (!response.ok) {
+                throw new Error('Failed to fetch student balance');
+            }
+            const data = await response.json();
+            return data.balance;
+        }
+        catch (error) {
+            console.error('Error fetching student balance:', error);
+            return 0; // Dummy data
+        }
     };
 
     const fetchAttendanceByStudent = async (studentId: string): Promise<EventStudent[]> => {
-        // Replace with actual data fetching logic
-        return []; // Dummy data
+        try {
+            const response = await fetch(`/api/eventAttendance?spaceId=${spaceId}&studentId=${studentId}&handler=student`)
+            if (!response.ok) {
+                throw new Error('Failed to fetch attendance data');
+            }
+            const data = await response.json();
+            return data;
+        }
+        catch (error) {
+            console.error('Error fetching attendance data:', error);
+            return []; // Dummy data
+        }
     };
 
     const handleSwitchChange = (eventId: string, checked: boolean) => {
@@ -89,13 +108,79 @@ const AttendanceModel: React.FC<AttendanceModelProps> = ({
         }));
     };
 
-
-
     // Handle attendance update
     const handleAttendanceUpdate = async () => {
         if (isSaving) return;
 
         setIsSaving(true);
+        // get updated items 
+        const allKeys = new Set([
+            ...Object.keys(updatedStatus),
+            ...Object.keys(updatedExtraPoints),
+        ])
+        try {
+            for (const eventId of allKeys) {
+                const event = attendanceEvents.find(e => e.id === eventId);
+                if (!event) continue
+                const eventType = eventTypes.find(e => e.id === event.eventTypeId);
+                if (!eventType) continue;
+
+                const isPresent = updatedStatus[event.id] ?? false;
+
+                let points = isPresent ? eventType.attendancePoints ?? 0 : 0;
+                if (updatedExtraPoints[eventId] != null) {
+                    points += updatedExtraPoints[eventId]
+                } else if (originalExtraPoints[eventId]) {
+                    for (const [key, value] of Object.entries(originalExtraPoints[eventId])) {
+                        const originalValue = originalExtraPoints[eventId]?.[key] ?? 0
+                        if (value <= 0 && originalValue <= 0) continue
+
+                        const extraPoint = eventType.extraPoints?.find((e) => e.name === key)
+                        const pointValue = extraPoint?.points ?? 0
+                        points += value * pointValue
+                    }
+                }
+                const description =
+                    updatedExtraPointsMap[eventId] ?? originalExtraPoints[eventId] ?? null
+
+                await fetch(`/api/eventAttendance?spaceId=${spaceId}&studentId=${student.id}&eventId=${eventId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentId: student.id,
+                        eventId,
+                        isPresent: isPresent ? 1 : 0,
+                        points,
+                        description: description ? JSON.stringify(description) : null
+                    })
+                })
+
+                // reset for next save
+                setOriginalStatus((prev) => ({
+                    ...prev,
+                    [eventId]: isPresent,
+                }));
+                setOriginalExtraPoints((prev) => ({
+                    ...prev,
+                    [eventId]: {},
+                }));
+
+                onAttendanceUpdated(student, event, isPresent);
+                setStudentBalance(await fetchStudentBalance(student.id));
+            }
+        } catch (error) {
+            console.error('Error updating attendance:', error);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    // Handle attendance update
+    const handleAttendanceUpdateV1 = async () => {
+        if (isSaving) return;
+
+        setIsSaving(true);
+        // get updated items 
         try {
             for (const event of attendanceEvents) {
                 const isPresent = updatedStatus[event.id] ?? false;
@@ -121,18 +206,39 @@ const AttendanceModel: React.FC<AttendanceModelProps> = ({
         }
     };
 
-    //   const handleExtraPointsDialogClose = (selectedPoints: Record<string, number>) => {
-    //     if (selectedPoints) {
-    //       setUpdatedExtraPoints((prev) => ({ ...prev, ...selectedPoints }));
-    //     }
-    //     setOpenExtraPointsDialog(null);
-    //   };
-
     const handleExtraPointsDialogOpen = (event: Event) => {
         setSelectExtraPointsDialog(event);
     };
 
-    const handleExtraPointsDialogClose = () => {
+    const handleExtraPointsDialogClose = (selectedPoints: Record<string, number>, event: Event) => {
+        const eventType = eventTypes.find((et) => et.id === event.eventTypeId)!
+        const eventId = event.id;
+        if (selectedPoints) {
+            let extraPointsTotal = 0;
+            var localUpdatedextraPointsMap = updatedExtraPointsMap[eventId] ??
+                originalExtraPoints[eventId] ?? {};
+            Object.entries(selectedPoints).forEach(([key, value]) => {
+                const originalValue = originalExtraPoints[eventId]?.[key] ?? 0
+                if (value <= 0 && (originalValue <= 0)) {
+                    return;
+                } else {
+                    localUpdatedextraPointsMap[key] = value;
+                    const extraPoint = eventType.extraPoints?.find((e) => e.name === key)
+                    const pointValue = extraPoint?.points ?? 0
+                    extraPointsTotal += value * pointValue
+                }
+            })
+            console.log("Selected Extra Points:", extraPointsTotal);
+
+            setUpdatedExtraPointsMap((prev) => ({
+                ...prev,
+                [eventId]: localUpdatedextraPointsMap,
+            }));
+            setUpdatedExtraPoints((prev) => ({
+                ...prev,
+                [eventId]: extraPointsTotal,
+            }));
+        }
         setSelectExtraPointsDialog(null);
     };
 
@@ -153,7 +259,16 @@ const AttendanceModel: React.FC<AttendanceModelProps> = ({
 
     const handleWithdrawDepositAction = async (action: string, amount: number, comment: string) => {
         console.log(`Action: ${action}, Amount: ${amount}, Comment: ${comment}`);
-        // Implement actual logic for withdrawing or depositing here
+
+        await fetch(`/api/studentAccount?spaceId=${spaceId}&handler=transactions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                studentId: student.id,
+                amount: action.toLowerCase() == "Withdraw".toLowerCase() ? -1 * amount : amount,
+                comment
+            })
+        })
     };
 
     const handleCloseManualTransactionDialog = () => {
@@ -177,7 +292,7 @@ const AttendanceModel: React.FC<AttendanceModelProps> = ({
                     Deposit
                 </Button>
             </div>
-
+            <hr className="mt-4"/>
             <div>
                 {attendanceEvents.map(event => {
                     const eventType = eventTypes.find(e => e.id === event.eventTypeId);
@@ -203,7 +318,7 @@ const AttendanceModel: React.FC<AttendanceModelProps> = ({
                                 </div>
                             )}
                             <Switch
-                                checked={updatedStatus[event.id] ?? false}
+                                checked={updatedStatus[event.id] ?? originalStatus[event.id] ?? false}
                                 onCheckedChange={checked => handleSwitchChange(event.id, checked)}
                             />
                         </div>
@@ -252,8 +367,8 @@ const AttendanceModel: React.FC<AttendanceModelProps> = ({
                 <EventSelectionDialog
                     eventType={eventTypes.find((et) => et.id === selectExtraPointsDialog.eventTypeId)!}
                     event={selectExtraPointsDialog}
-                    initialValue={updatedExtraPoints}
-                    onSave={handleExtraPointsDialogClose}
+                    initialValue={updatedExtraPointsMap[selectExtraPointsDialog.id] ?? originalExtraPoints[selectExtraPointsDialog.id]}
+                    onSave={(selectedPoints) => handleExtraPointsDialogClose(selectedPoints, selectExtraPointsDialog)}
                     onClose={() => setSelectExtraPointsDialog(null)}
                 />
             )}
@@ -269,20 +384,19 @@ interface EventSelectionDialogProps {
     onClose: () => void;
 }
 
-const EventSelectionDialog: React.FC<EventSelectionDialogProps> = ({ eventType, event, initialValue, onSave, onClose }) => {
+export const EventSelectionDialog: React.FC<EventSelectionDialogProps> = ({ eventType, event, initialValue, onSave, onClose }) => {
     const [selectedPoints, setSelectedPoints] = useState<Record<string, number>>({});
     const [extraPoints, setExtraPoints] = useState<{ name: string; points: number; maxPoints?: number }[]>([]);
 
     useEffect(() => {
         const initPoints: Record<string, number> = {};
         eventType.extraPoints?.forEach((entry) => {
-            console.log(entry);
             initPoints[entry['name']] = initialValue?.[entry['name']] ?? 0;
         });
         setExtraPoints(eventType.extraPoints?.map((ep) => ({
             name: ep['name'],
             points: ep['points'],
-            maxPoints: ep['maxPoints']
+            maxPoints: ep['max_points'] ?? 1
         })) ?? []);
         setSelectedPoints(initPoints);
     }, [eventType, initialValue]);
@@ -329,7 +443,7 @@ const EventSelectionDialog: React.FC<EventSelectionDialogProps> = ({ eventType, 
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleChangePoints(entry.name, 1)}
-                                    disabled={selectedPoints[entry.name] === (entry.maxPoints ?? Infinity)}
+                                    disabled={selectedPoints[entry.name] === (entry.maxPoints ?? 1)}
                                 >
                                     +
                                 </Button>
@@ -347,4 +461,3 @@ const EventSelectionDialog: React.FC<EventSelectionDialogProps> = ({ eventType, 
         </Dialog>
     );
 };
-export default AttendanceModel;

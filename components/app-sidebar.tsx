@@ -17,7 +17,7 @@ import {
   Settings,
   Settings2,
   SquareTerminal,
-  User,
+  User as ReactUserIcon,
   Users,
 } from "lucide-react"
 
@@ -35,20 +35,21 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { useParams } from "next/navigation"
+import { User } from "@/lib/db/schema";
 
 
-function getSidebarData(spaceId?: string) {
+function getSidebarData(spaceId?: string, user?: User) {
   return {
   user: {
-    name: "Bassem Adel",
-    email: "basem.adel1995@gmail.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: user?.name || "Unkown User",
+    email: user?.email || "me@example.com",
+    avatar: `https://ui-avatars.com/api/?name=${user?.name || "Unkown User"}&background=random`,
   },
   navMain: [
     {
       title: "Students",
       url: spaceId ? `/${spaceId}/admin/students` : "#",
-      icon: User,
+      icon: ReactUserIcon,
       // icon: SquareTerminal,
       isActive: true,
       // items: [
@@ -183,12 +184,13 @@ function getSidebarData(spaceId?: string) {
 };
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  
+export function AppSidebar({ user, ...props }: React.ComponentProps<typeof Sidebar> & {
+  user?: User;
+}) {
   const params = useParams()
   const spaceId = params?.space_id as string | undefined;
   
-  const data = getSidebarData(spaceId);
+  const data = getSidebarData(spaceId, user);
   return (
     <Sidebar
       className="top-(--header-height) h-[calc(100svh-var(--header-height))]!"

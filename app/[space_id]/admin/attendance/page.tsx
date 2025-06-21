@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Student, Event, Group, EventType } from '@/lib/db/schema';
-import AttendanceModel from "./attendanceModel"
+import { AttendanceModel } from "@/components/event/attendanceModel"
 
 const AttendanceTab: React.FC = () => {
     const [students, setStudents] = useState<Student[]>([]);
@@ -119,6 +119,11 @@ const AttendanceTab: React.FC = () => {
         (student) =>
             (!selectedGroupId || student.groupId === selectedGroupId) &&
             student.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const getGroupName = (id: string | null) => {
+        if (!id) return null
+        return groups.find(group => group.id === id)?.name ?? null
+    }
 
     return (
         <main className="max-w-screen-xl mx-auto px-4 py-8">
@@ -233,11 +238,12 @@ const AttendanceTab: React.FC = () => {
                         <DialogTitle>{selectedStudent?.name} Actions</DialogTitle>
                     </DialogHeader>
                     <div className="mb-2">
-                        <div>Group: {selectedStudent?.groupId}</div>
+                        <div>Group: {getGroupName(selectedStudent?.groupId ?? null) || 'N/A'}</div>
                         <div>Date of Birth: {selectedStudent?.dob}</div>
                     </div>
                     {selectedStudent && (
-                        <AttendanceModel student={selectedStudent!}
+                        <AttendanceModel spaceId={spaceId}
+                            student={selectedStudent!}
                             eventTypes={eventTypes}
                             attendanceEvents={attendanceEvents}
                             onAttendanceUpdated={() => { }} />)}

@@ -51,8 +51,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   async function loadData() {
     try {
       const [userData, spaceData] = await Promise.all([getUser(), getSpace()]);
-      console.log("Space Data:", spaceData);
-      console.log("User Data:", userData);
       if (!userData || !spaceData) {
         router.refresh();
         router.push('/');
@@ -79,7 +77,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <SidebarProvider className="flex flex-col">
         <SiteHeader headerName={space.name} />
         <div className="flex flex-1">
-          <AppSidebar />
+          <AppSidebar user={user} />
           <SidebarInset>
             <div className="w-full">
               {children}

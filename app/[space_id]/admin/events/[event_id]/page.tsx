@@ -9,42 +9,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ChevronDown, ChevronRight, Plus, MoreHorizontal, Search, Camera } from "lucide-react"
 import type { Event, EventStudent, Student, Group, EventType } from "@/lib/db/schema"
+import { isDescendant } from "@/lib/utils"
+import { StudentList } from "@/components/event/student-list"
+import { ActivityList } from "@/components/event/activity-list"
+import { ActivityItem, GroupItem } from "@/components/event/activity-list"
 
-type ActivityItem = {
-  id: string
-  name: string
-  description?: string
-  groupPoints: GroupItem[]
-}
-
-type GroupItem = {
-  id: string
-  name: string
-  points: string
-}
 
 export default function EventAttendancePage() {
   const params = useParams()
   const searchParams = useSearchParams()
   const router = useRouter()
   const spaceId = params?.space_id as string
-  const initialEventId = searchParams?.get('eventId')
+  const initialEventId = params?.event_id as string
 
   const [selectedEventId, setSelectedEventId] = useState<string | null>(initialEventId)
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
+  const [selectedGroupId, setSelectedGroupId] = useState<string>("all")
   const [currentEventType, setCurrentEventType] = useState<EventType | null>(null)
   const [students, setStudents] = useState<Student[]>([])
   const [groups, setGroups] = useState<Group[]>([])
   const [events, setEvents] = useState<Event[]>([])
-  const [attendance, setAttendance] = useState<Record<string, boolean>>({})
-  const [attendanceExtraPoints, setAttendanceExtraPoints] = useState<Record<string, Record<string, number>>>({})
+  const [attendance, setAttendance] = useState<Record<string, { isPresent: boolean, extraPoints: Record<string, number> }>>({})
   const [searchQuery, setSearchQuery] = useState("")
   const [activities, setActivities] = useState<ActivityItem[]>([])
-  const [expandedActivity, setExpandedActivity] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedTab, setSelectedTab] = useState("activities")
@@ -54,9 +42,14 @@ export default function EventAttendancePage() {
   const [currentGuess, setCurrentGuess] = useState<number | null>(null)
 
   useEffect(() => {
-    loadGroups()
-    loadEvents()
-    loadStudents()
+    Promise.all([
+      loadGroups(),
+      loadEvents(),
+      loadStudents()]).then(() => {
+        if (selectedEventId) {
+          selectEvent(selectedEventId)
+        }
+      })
   }, [spaceId])
 
   useEffect(() => {
@@ -101,6 +94,7 @@ export default function EventAttendancePage() {
   }
 
   const selectEvent = async (eventId: string) => {
+    if (!eventId) return
     try {
       // Fetch attendance data for the event
       const attendanceResponse = await fetch(`/api/eventAttendance?spaceId=${spaceId}&handler=event&eventId=${eventId}`)
@@ -108,36 +102,39 @@ export default function EventAttendancePage() {
       const attendanceData = await attendanceResponse.json()
 
       // Update attendance status
-      const newAttendance: Record<string, boolean> = {}
-      const newExtraPoints: Record<string, Record<string, number>> = {}
-      
-      attendanceData.forEach((record: any) => {
-        newAttendance[record.studentId] = record.isPresent
+      const newAttendance: Record<string, { isPresent: boolean, extraPoints: Record<string, number> }> = {}
+      attendanceData.forEach((record: EventStudent) => {
+
+        newAttendance[record.studentId] = {
+          isPresent: record.isPresent,
+          extraPoints: {}
+        }
         if (record.description) {
           try {
-            newExtraPoints[record.studentId] = JSON.parse(record.description)
+            newAttendance[record.studentId].extraPoints = JSON.parse(record.description)
           } catch (e) {
             // Handle JSON parse error
           }
         }
-      })
 
+      })
       setAttendance(newAttendance)
-      setAttendanceExtraPoints(newExtraPoints)
 
       // Fetch event type details
       const selectedEvent = events.find(event => event.id === eventId)
       if (selectedEvent?.eventTypeId) {
-        const eventTypeResponse = await fetch(`/api/types?spaceId=${spaceId}&typeId=${selectedEvent.eventTypeId}`)
-        if (eventTypeResponse.ok) {
-          const eventTypeData = await eventTypeResponse.json()
-          setCurrentEventType(eventTypeData)
+        if (currentEventType?.id !== selectedEvent.eventTypeId) {
+          const eventTypeResponse = await fetch(`/api/types?spaceId=${spaceId}&eventTypeId=${selectedEvent.eventTypeId}`)
+          if (eventTypeResponse.ok) {
+            const eventTypeData = await eventTypeResponse.json()
+            setCurrentEventType(eventTypeData)
+          }
         }
       }
 
       // Fetch activities for the event
       await fetchActivitiesAndGroups(eventId)
-      
+
       setSelectedEventId(eventId)
     } catch (err: any) {
       setError(err.message)
@@ -149,7 +146,7 @@ export default function EventAttendancePage() {
       const response = await fetch(`/api/activities?spaceId=${spaceId}&eventId=${eventId}`)
       if (!response.ok) throw new Error("Failed to fetch activities")
       const data = await response.json()
-      
+
       const activitiesWithGroups = data.map((activity: any) => ({
         id: activity.id,
         name: activity.name,
@@ -160,21 +157,21 @@ export default function EventAttendancePage() {
           points: activity.points?.find((p: any) => p.groupId === group.id)?.points?.toString() || "0"
         }))
       }))
-      
+
       setActivities(activitiesWithGroups)
     } catch (err: any) {
       setError(err.message)
     }
   }
 
-  const updateAttendance = async (studentId: string, isPresent: boolean) => {
+  const updateAttendance = async (studentId: string, isPresent: boolean, extraPoint: Record<string, number>) => {
     if (!selectedEventId || !currentEventType) return
 
     let extraPointsTotal = isPresent ? (currentEventType.attendancePoints || 0) : 0
-    
+
     // Calculate extra points
-    if (currentEventType.extraPoints && attendanceExtraPoints[studentId]) {
-      Object.entries(attendanceExtraPoints[studentId]).forEach(([key, value]) => {
+    if (currentEventType.extraPoints && extraPoint) {
+      Object.entries(extraPoint[studentId]).forEach(([key, value]) => {
         const extraPoint = currentEventType.extraPoints?.find((e: any) => e.name === key)
         extraPointsTotal += value * (extraPoint?.points || 0)
       })
@@ -189,13 +186,13 @@ export default function EventAttendancePage() {
           eventId: selectedEventId,
           isPresent,
           points: extraPointsTotal,
-          description: attendanceExtraPoints[studentId] ? JSON.stringify(attendanceExtraPoints[studentId]) : null
+          description: attendance[studentId]?.extraPoints ? JSON.stringify(attendance[studentId].extraPoints) : null
         })
       })
 
       if (!response.ok) throw new Error("Failed to update attendance")
 
-      setAttendance(prev => ({ ...prev, [studentId]: isPresent }))
+      setAttendance(prev => ({ ...prev, [studentId]: { isPresent, extraPoints: extraPoint } }))
     } catch (err: any) {
       setError(err.message)
     }
@@ -203,7 +200,7 @@ export default function EventAttendancePage() {
 
   const saveActivityPoints = async (activityId: string, groupId: string, points: string) => {
     try {
-      const response = await fetch("/api/activities/points", {
+      const response = await fetch("/api/activitiesPoints", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -219,7 +216,7 @@ export default function EventAttendancePage() {
     }
   }
 
-  const addActivity = async (name: string, description: string) => {
+  const addActivity = async (name: string, description?: string) => {
     if (!selectedEventId) return
 
     try {
@@ -244,12 +241,12 @@ export default function EventAttendancePage() {
 
   const getGroupName = (id: string | null) => {
     if (!id) return null
-    return groups.find(group => group.id === id)?.name
+    return groups.find(group => group.id === id)?.name ?? null
   }
 
   const filterStudents = () => {
     let filteredStudents = students.filter(student => {
-      const matchesGroup = !selectedGroupId || student.groupId === selectedGroupId
+      const matchesGroup = !selectedGroupId || (selectedGroupId === "all" || (student.groupId === selectedGroupId) || isDescendant(groups, selectedGroupId, student.groupId))
       const matchesSearch = !searchQuery || student.name.toLowerCase().includes(searchQuery.toLowerCase())
       return matchesGroup && matchesSearch
     })
@@ -258,8 +255,8 @@ export default function EventAttendancePage() {
   }
 
   const filterGroups = (groupPoints: GroupItem[]) => {
-    return groupPoints.filter(group => 
-      !selectedGroupId || group.id === selectedGroupId
+    return groupPoints.filter(group =>
+      !selectedGroupId || (selectedGroupId === "all" || (group.id === selectedGroupId) || isDescendant(groups, selectedGroupId, group.id))
     )
   }
 
@@ -268,51 +265,13 @@ export default function EventAttendancePage() {
       setCurrentGuess(null)
       return
     }
-    
+
     if (currentGuess === null) {
       setCurrentGuess(0)
     } else {
       setCurrentGuess((currentGuess + 1) % guessedStudents.length)
     }
   }
-
-  const studentWidget = (student: Student) => (
-    <div key={student.id} className="flex items-center justify-between p-4 border-b">
-      <div className="flex items-center gap-4">
-        <img
-          src={student.imagePath || `https://ui-avatars.com/api/?name=${student.name}&background=random`}
-          alt={student.name}
-          className="h-14 w-14 rounded-full object-cover"
-        />
-        <div>
-          <div className="font-medium">{student.name}</div>
-          <div className="text-sm text-gray-500">
-            Group: {getGroupName(student.groupId) || 'N/A'}
-          </div>
-          <div className="text-sm text-gray-500">
-            DOB: {student.dob ? new Date(student.dob).toLocaleDateString() : 'N/A'}
-          </div>
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        {currentEventType?.extraPoints && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {/* Show extra points dialog */}}
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        )}
-        {selectedEventId && (
-          <Switch
-            checked={attendance[student.id] || false}
-            onCheckedChange={(value) => updateAttendance(student.id, value)}
-          />
-        )}
-      </div>
-    </div>
-  )
 
   if (loading) return <div className="text-center py-8">Loading...</div>
   if (error) return <div className="text-red-500 text-center py-8">{error}</div>
@@ -321,7 +280,7 @@ export default function EventAttendancePage() {
     <main className="max-w-6xl mx-auto py-8 px-4">
       <div className="mb-6">
         <h1 className="text-2xl font-bold mb-4">Event Attendance</h1>
-        
+
         {/* Event and Group Selection */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <Select value={selectedEventId || ""} onValueChange={setSelectedEventId}>
@@ -362,84 +321,13 @@ export default function EventAttendancePage() {
 
         {/* Activities Tab */}
         <TabsContent value="activities">
-          <div className="space-y-4">
-            {activities.map(activity => (
-              <Card key={activity.id}>
-                <Collapsible
-                  open={expandedActivity === activity.id}
-                  onOpenChange={(open) => setExpandedActivity(open ? activity.id : null)}
-                >
-                  <CollapsibleTrigger asChild>
-                    <CardHeader className="cursor-pointer hover:bg-gray-50">
-                      <div className="flex justify-between items-center">
-                        <CardTitle className="text-lg">{activity.name}</CardTitle>
-                        {expandedActivity === activity.id ? 
-                          <ChevronDown className="h-4 w-4" /> : 
-                          <ChevronRight className="h-4 w-4" />
-                        }
-                      </div>
-                    </CardHeader>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <CardContent>
-                      {filterGroups(activity.groupPoints).map(group => (
-                        <div key={group.id} className="flex justify-between items-center py-2">
-                          <span>{group.name}</span>
-                          <Input
-                            type="number"
-                            value={group.points}
-                            onChange={(e) => {
-                              const newActivities = activities.map(act => 
-                                act.id === activity.id 
-                                  ? {
-                                      ...act,
-                                      groupPoints: act.groupPoints.map(gp =>
-                                        gp.id === group.id ? { ...gp, points: e.target.value } : gp
-                                      )
-                                    }
-                                  : act
-                              )
-                              setActivities(newActivities)
-                            }}
-                            onBlur={() => saveActivityPoints(activity.id, group.id, group.points)}
-                            className="w-20 text-center"
-                            placeholder="Points"
-                          />
-                        </div>
-                      ))}
-                    </CardContent>
-                  </CollapsibleContent>
-                </Collapsible>
-              </Card>
-            ))}
-            
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="w-full">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Activity
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Activity</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <Input placeholder="Activity Name" id="activity-name" />
-                  <Input placeholder="Activity Description" id="activity-description" />
-                  <Button onClick={() => {
-                    const name = (document.getElementById('activity-name') as HTMLInputElement)?.value
-                    const description = (document.getElementById('activity-description') as HTMLInputElement)?.value
-                    if (name) {
-                      addActivity(name, description || "")
-                    }
-                  }}>
-                    Add
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+          <ActivityList
+            activities={activities}
+            setActivities={setActivities}
+            addActivity={addActivity}
+            onSave={saveActivityPoints}
+            filterGroups={filterGroups}
+          />
         </TabsContent>
 
         {/* Students Tab */}
@@ -453,7 +341,21 @@ export default function EventAttendancePage() {
             />
             <Card>
               <CardContent className="p-0">
-                {filterStudents().map(student => studentWidget(student))}
+                {/* <StudentList students={students} filter={searchQuery} selectedGroupId={selectedGroupId} attendance={attendance} updateAttendance={updateAttendance} /> */}
+                {filterStudents().map(student =>
+                (
+
+                  <StudentList key={student.id} student={student}
+                    getGroupName={getGroupName}
+                    currentEventType={currentEventType!}
+                    event={events.find(e => e.id === selectedEventId)!}
+                    attendance={attendance[student.id] ?? {
+                      isPresent: false,
+                      extraPoints: {}
+                    }}
+                    onAttendanceChange={(isPresent, extraPoints) => updateAttendance(student.id, isPresent, extraPoints)} />
+                )
+                )}
               </CardContent>
             </Card>
           </div>
@@ -473,11 +375,19 @@ export default function EventAttendancePage() {
                 </div>
               </CardContent>
             </Card>
-            
+
             {currentGuess !== null && guessedStudents[currentGuess] && (
               <Card>
                 <CardContent className="p-0">
-                  {studentWidget(students.find(s => s.id === guessedStudents[currentGuess])!)}
+                  <StudentList student={students.find(s => s.id === guessedStudents[currentGuess])!}
+                    getGroupName={getGroupName}
+                    currentEventType={currentEventType!}
+                    event={events.find(e => e.id === selectedEventId)!}
+                    attendance={attendance[guessedStudents[currentGuess]] ?? {
+                      isPresent: false,
+                      extraPoints: {}
+                    }}
+                    onAttendanceChange={(isPresent, extraPoints) => updateAttendance(guessedStudents[currentGuess], isPresent, extraPoints)} />
                 </CardContent>
               </Card>
             )}

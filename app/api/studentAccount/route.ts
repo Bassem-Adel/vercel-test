@@ -22,12 +22,19 @@ export async function GET(request: NextRequest) {
                 console.error("Supabase error:", error)
                 return NextResponse.json({ message: 'Error fetching group points', error }, { status: 500 })
             }
-            
+
             const mappedData = (data ?? []).map((point: any) => ({
                 student_id: point.student_id,
                 balance: point.total_points,
             }))
 
+            if (mappedData.length === 0) {
+                return NextResponse.json({
+                    student_id: studentId,
+                    balance: 0,
+                })
+                // return NextResponse.json({ message: 'No data found for the given studentId' }, { status: 404 })
+            }
             return NextResponse.json(studentId ? mappedData[0] : mappedData)
         }
         else if (handler === 'transactions') {
@@ -65,17 +72,17 @@ export async function POST(request: NextRequest) {
         const supabase = await createClient()
         const { searchParams } = new URL(request.url)
         const handler = searchParams.get('handler') ?? 'transactions' // Default to 'transactions' if not specified
-        
+
         if (handler === 'transactions') {
             const body = await request.json()
-            const { studentId, points, comment } = body
+            const { studentId, amount, comment } = body
 
-            if (!studentId || !points) {
+            if (!studentId || !amount) {
                 return NextResponse.json({ message: 'Missing required fields' }, { status: 400 })
             }
             var currentUser = await supabase.auth.getUser()
             const { error } = await supabase.from('student_transaction').insert({
-                'points': points,
+                'points': amount,
                 'comment': comment?.isEmpty ?? true ? null : comment,
                 'student_id': studentId,
                 'profile_id': currentUser?.data.user?.id, // Assuming you want to use the authenticated user's ID
