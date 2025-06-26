@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { CalendarIcon } from "lucide-react"
 import type { Event, EventType } from "@/lib/db/schema"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 export default function EditEventPage() {
   const params = useParams()
@@ -20,6 +21,7 @@ export default function EditEventPage() {
   const [loading, setLoading] = useState(false)
   const [fetchLoading, setFetchLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const [formData, setFormData] = useState<Event>({
     id: eventId,
@@ -114,15 +116,11 @@ export default function EditEventPage() {
   }
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this event? This action cannot be undone.")) {
-      return
-    }
-
     setLoading(true)
     setError(null)
 
     try {
-      const response = await fetch(`/api/events?eventId=${eventId}`, {
+      const response = await fetch(`/api/events?id=${eventId}`, {
         method: "DELETE"
       })
 
@@ -130,7 +128,7 @@ export default function EditEventPage() {
         const errorData = await response.json()
         throw new Error(errorData.message || "Failed to delete event")
       }
-
+      setDeleteDialogOpen(false)
       router.push(`/${spaceId}/admin/events`)
     } catch (err: any) {
       setError(err.message)
@@ -228,7 +226,7 @@ export default function EditEventPage() {
               <Button
                 type="button"
                 variant="destructive"
-                onClick={handleDelete}
+                onClick={() => { setDeleteDialogOpen(true) }}
                 disabled={loading}
               >
                 {loading ? "Deleting..." : "Delete Event"}
@@ -250,6 +248,20 @@ export default function EditEventPage() {
           </form>
         </CardContent>
       </Card>
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Confirmation</DialogTitle>
+          </DialogHeader>
+          <p>Are you sure you want to delete this event? This action cannot be undone.</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

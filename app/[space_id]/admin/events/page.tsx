@@ -52,7 +52,7 @@ export default function EventsPage() {
   const handleDelete = async () => {
     if (!deleteId) return
     try {
-      const res = await fetch(`/api/events/${deleteId}`, {
+      const res = await fetch(`/api/events?id=${deleteId}`, {
         method: "DELETE",
       })
       if (!res.ok) throw new Error("Failed to delete item")
