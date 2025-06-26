@@ -59,15 +59,19 @@ export async function POST(request: Request) {
     try {
         const supabase = await createClient()
         const body = await request.json()
-        const { id, name, spaceId } = body
+        const { parentId, name, spaceId } = body
 
-        if (!id || !name || !spaceId) {
+        if (!name || !spaceId) {
             return Response.json({ message: 'Missing required fields' }, { status: 400 })
         }
 
         const { error } = await supabase
-            .from('groups')
-            .insert([{ id, name, spaceId }])
+            .from('student_group')
+            .insert([{ 
+                'group_name': name,
+                'parent_group': parentId,
+                'space_id': spaceId
+            }])
 
         if (error) {
             console.error("Supabase error:", error)
@@ -85,15 +89,19 @@ export async function PUT(request: Request) {
     try {
         const supabase = await createClient()
         const body = await request.json()
-        const { id, name, spaceId } = body
+        const { id, name, spaceId, parentId } = body
 
         if (!id || !name || !spaceId) {
             return Response.json({ message: 'Missing required fields' }, { status: 400 })
         }
 
         const { error } = await supabase
-            .from('groups')
-            .update({ name, spaceId })
+            .from('student_group')
+            .update({ 
+                'group_name': name,
+                'parent_group': parentId,
+                'space_id': spaceId
+             })
             .eq('id', id)
 
         if (error) {
@@ -119,7 +127,7 @@ export async function DELETE(request: Request) {
         }
 
         const { error } = await supabase
-            .from('groups')
+            .from('student_group')
             .delete()
             .eq('id', id)
 

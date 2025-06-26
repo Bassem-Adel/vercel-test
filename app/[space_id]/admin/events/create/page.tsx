@@ -22,14 +22,14 @@ export default function CreateEventPage() {
   const [eventTypes, setEventTypes] = useState<EventType[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [startDate, setStartDate] = useState<Date>()
-  const [endDate, setEndDate] = useState<Date>()
 
   const [formData, setFormData] = useState<Event>({
     id: "",
     name: "",
     eventTypeId: "",
     spaceId: spaceId,
+    startDate: undefined,
+    endDate: undefined,
   })
 
   useEffect(() => {
@@ -63,8 +63,6 @@ export default function CreateEventPage() {
       const eventData = {
         ...formData,
         spaceId,
-        startDate: startDate?.toISOString(),
-        endDate: endDate?.toISOString(),
       }
 
       const response = await fetch("/api/events", {

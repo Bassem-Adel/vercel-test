@@ -26,8 +26,8 @@ export default function EditEventPage() {
     name: "",
     eventTypeId: "",
     spaceId: spaceId,
-    startDate: "",
-    endDate: "",
+    startDate: undefined,
+    endDate: undefined,
   })
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function EditEventPage() {
       
       // Format dates for input fields (YYYY-MM-DD)
       const formatDateForInput = (dateString: string | null) => {
-        if (!dateString) return ""
+        if (!dateString) return undefined
         return new Date(dateString).toISOString().split('T')[0]
       }
 

@@ -93,7 +93,7 @@ export default function UsersPage() {
     return (
         <main className="max-w-4xl mx-auto py-8 px-4">
             <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold">Space Users</h1>
+            <h1 className="text-2xl font-bold">Users</h1>
                 <Button onClick={() => setAddUserModalOpen(true)}>
                     <Plus className="h-4 w-4" />
                     <span className="hidden sm:inline">Add User

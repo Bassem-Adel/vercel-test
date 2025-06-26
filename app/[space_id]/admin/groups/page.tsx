@@ -61,7 +61,7 @@ export default function GroupsPage() {
                 const res = await fetch("/api/groups", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name: groupName, parentId: selectedParentId, spaceId }),
+                    body: JSON.stringify({ name: groupName, parentId: selectedParentId === "none" ? null : selectedParentId, spaceId }),
                 })
 
                 if (!res.ok) throw new Error("Failed to add group")
@@ -82,7 +82,7 @@ export default function GroupsPage() {
                 const res = await fetch("/api/groups", {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ id: selectedGroup.id, name: groupName, parentId: selectedParentId, spaceId }),
+                    body: JSON.stringify({ id: selectedGroup.id, name: groupName, parentId: selectedParentId === "none" ? null : selectedParentId, spaceId }),
                 })
 
                 if (!res.ok) throw new Error("Failed to update group")
@@ -150,7 +150,7 @@ export default function GroupsPage() {
     return (
         <main className="max-w-6xl mx-auto py-8 px-4">
             <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Manage Groups</h2>
+                <h2 className="text-xl font-bold">Groups</h2>
                 <Button onClick={() => setOpenFormDialog(true)}>Create Group</Button>
             </div>
             {loading ? <div>Loading...</div> : <div>{renderGroupList(groups)}</div>}

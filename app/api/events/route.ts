@@ -55,7 +55,13 @@ export async function POST(request: Request) {
 
         const { error } = await supabase
             .from('events')
-            .insert([{ name, start_date: startDate, end_date: endDate, event_type_id: eventTypeId, space_id: spaceId }])
+            .insert([{ 
+                event_name: name, 
+                start_date: startDate, 
+                end_date: endDate, 
+                event_type_id: eventTypeId, 
+                space_id: spaceId 
+            }])
 
         if (error) {
             console.error("Supabase error:", error)
@@ -81,7 +87,13 @@ export async function PUT(request: Request) {
 
         const { error } = await supabase
             .from('events')
-            .update({ name, start_date: startDate, end_date: endDate, event_type_id: eventTypeId, space_id: spaceId })
+            .update({ 
+                event_name: name, 
+                start_date: startDate, 
+                end_date: endDate, 
+                event_type_id: eventTypeId, 
+                space_id: spaceId 
+            })
             .eq('id', id)
 
         if (error) {
