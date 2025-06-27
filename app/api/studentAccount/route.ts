@@ -58,7 +58,6 @@ export async function GET(request: NextRequest) {
                 profile_id: transaction.profile_id,
                 created_at: transaction.created_at,
             }))
-
             return NextResponse.json(mappedData)
         }
     } catch (err) {
@@ -83,7 +82,7 @@ export async function POST(request: NextRequest) {
             var currentUser = await supabase.auth.getUser()
             const { error } = await supabase.from('student_transaction').insert({
                 'points': amount,
-                'comment': comment?.isEmpty ?? true ? null : comment,
+                'comment': !comment ? null : comment,
                 'student_id': studentId,
                 'profile_id': currentUser?.data.user?.id, // Assuming you want to use the authenticated user's ID
             })

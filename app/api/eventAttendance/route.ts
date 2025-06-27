@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
                 'p_is_present': isPresent,
                 'p_points': points,
                 'p_description': description,
-                'profile_id': currentUser?.data.user?.id, // Assuming you want to use the authenticated user's ID
+                'p_profile_id': currentUser?.data.user?.id, // Assuming you want to use the authenticated user's ID
             })
 
         if (error) {

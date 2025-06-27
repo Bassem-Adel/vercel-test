@@ -47,7 +47,7 @@ export default function TypesPage() {
   const handleDelete = async () => {
     if (!deleteId) return
     try {
-      const res = await fetch(`/api/types/${deleteId}`, {
+      const res = await fetch(`/api/types?id=${deleteId}`, {
         method: "DELETE",
       })
       if (!res.ok) throw new Error("Failed to delete item")

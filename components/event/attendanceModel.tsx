@@ -252,6 +252,8 @@ export const AttendanceModel: React.FC<AttendanceModelProps> = ({
             await handleWithdrawDepositAction(action, amount, comment);
             setStudentBalance(await fetchStudentBalance(student.id));
             setOpenManualTransactionDialog(false);
+            setAmount(0);
+            setComment('');
         } else {
             console.log('Amount should be greater than 0');
         }
@@ -273,6 +275,8 @@ export const AttendanceModel: React.FC<AttendanceModelProps> = ({
 
     const handleCloseManualTransactionDialog = () => {
         setOpenManualTransactionDialog(false);
+        setAmount(0);
+        setComment('');
     };
 
     if (isLoading) {
@@ -292,7 +296,7 @@ export const AttendanceModel: React.FC<AttendanceModelProps> = ({
                     Deposit
                 </Button>
             </div>
-            <hr className="mt-4"/>
+            <hr className="mt-4" />
             <div>
                 {attendanceEvents.map(event => {
                     const eventType = eventTypes.find(e => e.id === event.eventTypeId);

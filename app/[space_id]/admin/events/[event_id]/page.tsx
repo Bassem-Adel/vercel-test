@@ -46,9 +46,7 @@ export default function EventAttendancePage() {
       loadGroups(),
       loadEvents(),
       loadStudents()]).then(() => {
-        if (selectedEventId) {
-          selectEvent(selectedEventId)
-        }
+        setSelectedEventId(selectedEventId)
       })
   }, [spaceId])
 
@@ -122,6 +120,8 @@ export default function EventAttendancePage() {
 
       // Fetch event type details
       const selectedEvent = events.find(event => event.id === eventId)
+      console.log("Fetching event type for eventTypeId:", selectedEvent?.eventTypeId)
+      console.log("current eventTypeId:", currentEventType?.id)
       if (selectedEvent?.eventTypeId) {
         if (currentEventType?.id !== selectedEvent.eventTypeId) {
           const eventTypeResponse = await fetch(`/api/types?spaceId=${spaceId}&eventTypeId=${selectedEvent.eventTypeId}`)
@@ -165,12 +165,14 @@ export default function EventAttendancePage() {
   }
 
   const updateAttendance = async (studentId: string, isPresent: boolean, extraPoint: Record<string, number>) => {
-    if (!selectedEventId || !currentEventType) return
+    console.log("Updating attendance for student:", studentId, "isPresent:", isPresent, "extraPoint:", extraPoint)
+    console.log("selectedEventId:", selectedEventId, "currentEventType:", currentEventType)
+    if (!selectedEventId) return
 
-    let extraPointsTotal = isPresent ? (currentEventType.attendancePoints || 0) : 0
+    let extraPointsTotal = isPresent ? (currentEventType?.attendancePoints || 0) : 0
 
     // Calculate extra points
-    if (currentEventType.extraPoints && extraPoint) {
+    if (currentEventType?.extraPoints && extraPoint && extraPoint[studentId]) {
       Object.entries(extraPoint[studentId]).forEach(([key, value]) => {
         const extraPoint = currentEventType.extraPoints?.find((e: any) => e.name === key)
         extraPointsTotal += value * (extraPoint?.points || 0)

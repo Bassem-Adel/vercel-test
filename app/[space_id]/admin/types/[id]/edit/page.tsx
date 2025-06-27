@@ -72,10 +72,11 @@ export default function EditEventTypePage() {
     setError(null)
 
     try {
-      const res = await fetch(`/api/types/${eventTypeId}`, {
+      const res = await fetch(`/api/types?id=${eventTypeId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          id: eventTypeId,
           name,
           icon,
           attendancePoints,
@@ -170,7 +171,7 @@ export default function EditEventTypePage() {
               />
               <Input
                 type="number"
-                placeholder="Max Points"
+                placeholder="Max Count"
                 value={pointTypeMaxPoints ?? ""}
                 onChange={(e) => setPointTypeMaxPoints(e.target.value ? parseInt(e.target.value, 10) : null)}
               />
@@ -183,7 +184,7 @@ export default function EditEventTypePage() {
                 <tr className="bg-gray-100">
                   <th className="border border-gray-300 px-4 py-2 text-left">Name</th>
                   <th className="border border-gray-300 px-4 py-2 text-left">Points</th>
-                  <th className="border border-gray-300 px-4 py-2 text-left">Max Points</th>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Max Count</th>
                   <th className="border border-gray-300 px-4 py-2 text-left">Actions</th>
                 </tr>
               </thead>
