@@ -77,7 +77,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <SidebarProvider className="flex flex-col">
         <SiteHeader headerName={space.name} />
         <div className="flex flex-1">
-          <AppSidebar user={user} />
+          <AppSidebar user={user} space={space} />
           <SidebarInset>
             <div className="w-full">
               {children}

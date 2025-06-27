@@ -9,7 +9,7 @@ export async function GET() {
         return Response.json({
             id: data.user.id,
             email: data.user.email,
-            name: data.user.user_metadata?.full_name || '',
+            name: data.user.user_metadata?.full_name || data.user.user_metadata?.username || '',
             updatedAt: data.user.updated_at || null,
         })
     }

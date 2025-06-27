@@ -78,13 +78,13 @@ function UserMenu() {
             <span>Dashboard</span>
           </Link>
         </DropdownMenuItem>
+        <SignOutButton />
         {/* <form action={handleSignOut} className="w-full"> */}
           {/* <button type="submit" className="flex w-full"> */}
-            <DropdownMenuItem className="w-full flex-1 cursor-pointer">
-              <LogOut className="mr-2 h-4 w-4" />
+            {/* <DropdownMenuItem className="w-full flex-1 cursor-pointer"> */}
+              {/* <LogOut className="mr-2 h-4 w-4" /> */}
               {/* <span>Sign out</span> */}
-              <SignOutButton />
-            </DropdownMenuItem>
+            {/* </DropdownMenuItem> */}
           {/* </button> */}
         {/* </form> */}
       </DropdownMenuContent>
@@ -97,7 +97,8 @@ function Header() {
     <header className="border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <Link href="/" className="flex items-center">
-          <CircleIcon className="h-6 w-6 text-orange-500" />
+          <img src="/checked.png" alt="Logo" className="size-8" />
+          {/* <CircleIcon className="h-6 w-6 text-orange-500" /> */}
           <span className="ml-2 text-xl font-semibold text-gray-900">Check</span>
         </Link>
         <div className="flex items-center space-x-4">

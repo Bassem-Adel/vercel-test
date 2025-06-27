@@ -35,7 +35,8 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { useParams } from "next/navigation"
-import { User } from "@/lib/db/schema";
+import { Space, User } from "@/lib/db/schema";
+import Link from "next/link"
 
 
 function getSidebarData(spaceId?: string, user?: User) {
@@ -184,8 +185,9 @@ function getSidebarData(spaceId?: string, user?: User) {
 };
 }
 
-export function AppSidebar({ user, ...props }: React.ComponentProps<typeof Sidebar> & {
+export function AppSidebar({ user, space, ...props }: React.ComponentProps<typeof Sidebar> & {
   user?: User;
+  space?: Space;
 }) {
   const params = useParams()
   const spaceId = params?.space_id as string | undefined;
@@ -200,15 +202,17 @@ export function AppSidebar({ user, ...props }: React.ComponentProps<typeof Sideb
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Command className="size-4" />
+              <Link href={`/${spaceId}/admin`}>
+                {/* <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"> */}
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-transparent text-sidebar-primary-foreground">
+                  {/* <Command className="size-4" /> */}
+                  <img src="/checked.png" alt="Logo" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">Acme Inc</span>
+                  <span className="truncate font-medium">{space?.name}</span>
                   <span className="truncate text-xs">Enterprise</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
