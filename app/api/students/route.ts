@@ -84,13 +84,20 @@ export async function PUT(request: Request) {
         const body = await request.json()
         const { id, name, dob, imagePath, embedding, groupId, spaceId } = body
 
-        if (!id || !name || !dob || !imagePath || !embedding || !groupId || !spaceId) {
+        if (!id || !name || !spaceId) {
             return Response.json({ message: 'Missing required fields' }, { status: 400 })
         }
 
         const { error } = await supabase
             .from('students')
-            .update({ name, dob, imagePath, embedding, groupId, spaceId })
+            .update({
+                'name': name,
+                'dob': dob,
+                'image_path': imagePath,
+                'embedding': embedding,
+                'group_id': groupId,
+                'space_id': spaceId,
+            })
             .eq('id', id)
 
         if (error) {
