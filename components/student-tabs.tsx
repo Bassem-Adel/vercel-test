@@ -3,6 +3,9 @@ import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import type { EventType, Event, EventStudent } from "@/lib/db/schema"
+import { EventTypeIconOptions } from "@/lib/utils";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Checkbox } from "./ui/checkbox";
 
 
 type OtherInfoTabProps = {
@@ -32,16 +35,12 @@ export function OtherInfoTab({ eventTypes, getAnalytics }: OtherInfoTabProps) {
         const eventType = eventTypeMap[typeId];
         const attended = attendedCount?.[typeId] || 0;
         const percentage = ((attended / totalCount) * 100).toFixed(2);
-
+        const Icon = EventTypeIconOptions[eventType?.icon ?? "help"]
         return (
           <li key={typeId} className="flex items-center gap-4">
             <div className="flex-shrink-0">
               <span className="text-2xl">
-                {eventType?.icon ? (
-                  <i className={`icon-${eventType.icon}`} />
-                ) : (
-                  <i className="icon-default" />
-                )}
+                <Icon className="h-6 w-6 text-gray-500" />
               </span>
             </div>
             <div>
@@ -79,6 +78,7 @@ export function AttendanceTab({
   const [enableEditing, setEnableEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [eventFilterModalOpen, setEventFilterModalOpen] = useState(false)
 
   useEffect(() => {
     async function fetchAttendance() {
@@ -108,6 +108,12 @@ export function AttendanceTab({
     if (!b.startDate) return 1;
     return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
   });
+  
+  const handleEventFilterChange = (eventTypeId: string) => {
+    setSelectedEventTypes((prev) =>
+      prev.includes(eventTypeId) ? prev.filter((id) => id !== eventTypeId) : [...prev, eventTypeId]
+    )
+  }
 
   const handleUpdateAttendance = async (eventId: string, isPresent: boolean) => {
     try {
@@ -134,7 +140,7 @@ export function AttendanceTab({
           <Button onClick={() => setEnableEditing((prev) => !prev)}>
             {enableEditing ? "Disable Editing" : "Enable Editing"}
           </Button>
-          <Button onClick={() => console.log("Show filter modal")}>
+          <Button onClick={() => setEventFilterModalOpen(true)}>
             Filter
           </Button>
         </div>
@@ -146,16 +152,13 @@ export function AttendanceTab({
           const eventType = eventTypes.find((type) => type.id === event.eventTypeId);
           const isPresent =
             attendance.find((att) => att.eventId === event.id)?.isPresent || false;
-          console.log("Event:", event, "isPresent:", isPresent);
+          // console.log("Event:", event, "isPresent:", isPresent);
+          const Icon = EventTypeIconOptions[eventType?.icon ?? "help"]
           return (
             <li key={event.id} className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <span className="text-2xl">
-                  {eventType?.icon ? (
-                    <i className={`icon-${eventType.icon}`} />
-                  ) : (
-                    <i className="icon-default" />
-                  )}
+                  <Icon className="h-6 w-6 text-gray-500" />
                 </span>
                 <span className="text-lg font-bold">{event.name}</span>
               </div>
@@ -174,6 +177,42 @@ export function AttendanceTab({
           );
         })}
       </ul>
+      
+
+      {/* Event Filter Modal */}
+      <Dialog open={eventFilterModalOpen} onOpenChange={setEventFilterModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Filter Events by Type</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={selectedEventTypes.length === 0}
+                onCheckedChange={(checked) =>
+                  setSelectedEventTypes(checked ? [] : eventTypes.map(et => et.id))
+                }
+              />
+              <span>Select All</span>
+            </div>
+            {eventTypes.map((eventType) => (
+              <div key={eventType.id} className="flex items-center gap-2">
+                <Checkbox
+                  checked={selectedEventTypes.includes(eventType.id)}
+                  onCheckedChange={() => handleEventFilterChange(eventType.id)}
+                />
+                <span>{eventType.name}</span>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEventFilterModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => setEventFilterModalOpen(false)}>Apply Filter</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

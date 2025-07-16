@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import type { EventType, Event, EventStudent, Student, User } from "@/lib/db/schema"
+import type { EventType, Event, EventStudent, Student, User, Group } from "@/lib/db/schema"
 import { AttendanceTab, OtherInfoTab } from "@/components/student-tabs";
 
 export default function StudentDetailsPage() {
@@ -25,6 +25,7 @@ export default function StudentDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState("info");
   const [missings, setMissings] = useState<any[]>([]);
+  const [groups, setGroups] = useState<Group[]>([])
   const [showAddMissingDialog, setShowAddMissingDialog] = useState(false);
   const [newMissing, setNewMissing] = useState({ persons: "", notes: "", type: "" });
 
@@ -33,15 +34,17 @@ export default function StudentDetailsPage() {
     async function fetchStudentDetails() {
       try {
         setLoading(true)
-        // const missingsRes = await fetch(`/api/students/${studentId}/missings`);
+        // const  = await 
 
-        const [studentRes, balanceRes, transactionsRes, eventTypesRes, eventsRes, attendanceRes] = await Promise.all([
+        const [studentRes, balanceRes, transactionsRes, eventTypesRes, eventsRes, attendanceRes, groupsRes, missingsRes] = await Promise.all([
           fetch(`/api/students?spaceId=${spaceId}&studentId=${studentId}`),
           fetch(`/api/studentAccount?spaceId=${spaceId}&studentId=${studentId}&handler=balance`),
           fetch(`/api/studentAccount?spaceId=${spaceId}&studentId=${studentId}&handler=transactions`),
           fetch(`/api/types?spaceId=${spaceId}`),
           fetch(`/api/events?spaceId=${spaceId}`),
           fetch(`/api/eventAttendance?spaceId=${spaceId}&studentId=${studentId}&handler=student`),
+          fetch(`/api/groups?spaceId=${spaceId}`),
+          fetch(`/api/studentMissings?spaceId=${spaceId}&studentId=${studentId}`),
         ]);
         if (!eventTypesRes.ok || !eventsRes.ok || !attendanceRes.ok) {
           throw new Error("Failed to fetch attendance data");
@@ -62,12 +65,14 @@ export default function StudentDetailsPage() {
         const studentData = await studentRes.json()
         const balanceData = await balanceRes.json()
         const transactionsData = await transactionsRes.json()
-        // const missingsData = await missingsRes.json();
+        const groupsData = await groupsRes.json()
+        const missingsData = await missingsRes.json();
 
         setStudent(studentData)
         setBalance(balanceData.balance)
         setTransactions(transactionsData)
-        // setMissings(missingsData);
+        setGroups(groupsData)
+        setMissings(missingsData);
 
       } catch (err: any) {
         setError(err.message || "Failed to load student details")
@@ -160,6 +165,11 @@ export default function StudentDetailsPage() {
     return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
   });
 
+  const getGroupName = (id: string | null) => {
+    if (!id) return null
+    return groups.find(group => group.id === id)?.name ?? null
+  }
+  
   return (
     <main className="max-w-6xl mx-auto py-8 px-4">
       {/* Header */}
@@ -185,7 +195,7 @@ export default function StudentDetailsPage() {
 
       {/* Tabs */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList>
+        <TabsList className="w-full">
           <TabsTrigger value="info">Info</TabsTrigger>
           <TabsTrigger value="missings">Missings</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
@@ -199,7 +209,7 @@ export default function StudentDetailsPage() {
             <h2 className="text-xl font-bold mb-4">Additional Info</h2>
             <p>Gender: {student?.gender || "N/A"}</p>
             <p>Date of Birth: {student?.dob || "N/A"}</p>
-            <p>Group: {student?.groupId || "N/A"}</p>
+            <p>Group: {getGroupName(student?.groupId ?? null) || 'N/A'}</p>
           </div>
           <OtherInfoTab eventTypes={eventTypes} getAnalytics={getAnalytics} />
         </TabsContent>
