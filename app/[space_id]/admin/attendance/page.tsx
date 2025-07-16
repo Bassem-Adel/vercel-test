@@ -246,13 +246,14 @@ const AttendanceTab: React.FC = () => {
                             student={selectedStudent!}
                             eventTypes={eventTypes}
                             attendanceEvents={attendanceEvents}
-                            onAttendanceUpdated={() => { }} />)}
+                            onAttendanceUpdated={() => { }}
+                            onClose={() => setOpenAttendanceDialog(false)} />)}
                     {/* You can add more attendance-related info or actions here */}
-                    <DialogFooter>
+                    {/* <DialogFooter>
                         <Button variant="outline" onClick={() => setOpenAttendanceDialog(false)}>
                             Close
                         </Button>
-                    </DialogFooter>
+                    </DialogFooter> */}
                 </DialogContent>
             </Dialog>
         </main>

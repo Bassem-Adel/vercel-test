@@ -15,6 +15,7 @@ interface AttendanceModelProps {
     attendanceEvents: Event[];
     eventTypes: EventType[];
     onAttendanceUpdated: (student: Student, event: Event, attendanceStatus: boolean) => void;
+    onClose: () => void;
 }
 
 export const AttendanceModel: React.FC<AttendanceModelProps> = ({
@@ -23,6 +24,7 @@ export const AttendanceModel: React.FC<AttendanceModelProps> = ({
     attendanceEvents,
     eventTypes,
     onAttendanceUpdated,
+    onClose,
 }) => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -249,9 +251,11 @@ export const AttendanceModel: React.FC<AttendanceModelProps> = ({
 
     const handleWithdrawDepositConfirm = async () => {
         if (amount > 0) {
+            setIsSaving(true);
             await handleWithdrawDepositAction(action, amount, comment);
             setStudentBalance(await fetchStudentBalance(student.id));
             setOpenManualTransactionDialog(false);
+            setIsSaving(false);
             setAmount(0);
             setComment('');
         } else {
@@ -330,7 +334,7 @@ export const AttendanceModel: React.FC<AttendanceModelProps> = ({
                 })}
             </div>
             <div className="flex justify-between mt-4">
-                <Button variant="outline" onClick={() => { }}>
+                <Button variant="outline" onClick={onClose}>
                     Close
                 </Button>
                 <Button onClick={handleAttendanceUpdate} disabled={isSaving}>
@@ -358,10 +362,12 @@ export const AttendanceModel: React.FC<AttendanceModelProps> = ({
                         className="mb-4"
                     />
                     <DialogFooter>
-                        <Button variant="outline" onClick={handleCloseManualTransactionDialog}>
+                        <Button variant="outline" onClick={handleCloseManualTransactionDialog} disabled={isSaving}>
                             Cancel
                         </Button>
-                        <Button onClick={handleWithdrawDepositConfirm}>Confirm</Button>
+                        <Button onClick={handleWithdrawDepositConfirm} disabled={isSaving}>
+                            {isSaving ? "Saving..." : "Confirm"}
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
