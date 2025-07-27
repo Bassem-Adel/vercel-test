@@ -29,11 +29,10 @@ export const StudentList = ({ student, getGroupName, currentEventType, event, at
                 <div>
                     <div className="font-medium">{student.name}</div>
                     <div className="text-sm text-gray-500">Group: {getGroupName(student.groupId) || 'N/A'}</div>
-                    <div className="text-sm text-gray-500">DOB: {student.dob}</div>
+                    <div className="text-sm text-gray-500">Date of Birth: {student.dob}</div>
                 </div>
             </div>
             <div className="flex gap-2">
-
                 {currentEventType?.extraPoints && (
                     <Button
                         variant="ghost"

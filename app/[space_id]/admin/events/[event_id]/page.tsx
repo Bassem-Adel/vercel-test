@@ -35,7 +35,7 @@ export default function EventAttendancePage() {
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedTab, setSelectedTab] = useState("activities")
+  const [selectedTab, setSelectedTab] = useState("students")
 
   // Face recognition states
   const [guessedStudents, setGuessedStudents] = useState<string[]>([])
@@ -51,10 +51,10 @@ export default function EventAttendancePage() {
   }, [spaceId])
 
   useEffect(() => {
-    if (selectedEventId) {
+    if (events.length > 0 && selectedEventId) {
       selectEvent(selectedEventId)
     }
-  }, [selectedEventId])
+  }, [events, selectedEventId])
 
   const loadGroups = async () => {
     try {
@@ -315,22 +315,10 @@ export default function EventAttendancePage() {
       </div>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="mb-6">
-          <TabsTrigger value="activities">Activities</TabsTrigger>
+        <TabsList className="mb-6 w-full">
           <TabsTrigger value="students">Students</TabsTrigger>
-          <TabsTrigger value="search">Search</TabsTrigger>
+          <TabsTrigger value="groups">Groups</TabsTrigger>
         </TabsList>
-
-        {/* Activities Tab */}
-        <TabsContent value="activities">
-          <ActivityList
-            activities={activities}
-            setActivities={setActivities}
-            addActivity={addActivity}
-            onSave={saveActivityPoints}
-            filterGroups={filterGroups}
-          />
-        </TabsContent>
 
         {/* Students Tab */}
         <TabsContent value="students">
@@ -346,7 +334,6 @@ export default function EventAttendancePage() {
                 {/* <StudentList students={students} filter={searchQuery} selectedGroupId={selectedGroupId} attendance={attendance} updateAttendance={updateAttendance} /> */}
                 {filterStudents().map(student =>
                 (
-
                   <StudentList key={student.id} student={student}
                     getGroupName={getGroupName}
                     currentEventType={currentEventType!}
@@ -361,11 +348,7 @@ export default function EventAttendancePage() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        {/* Search Tab (Face Recognition) */}
-        <TabsContent value="search">
-          <div className="space-y-4">
+          {/* <div className="space-y-4">
             <Card>
               <CardContent className="p-6">
                 <div className="text-center space-y-4">
@@ -393,7 +376,18 @@ export default function EventAttendancePage() {
                 </CardContent>
               </Card>
             )}
-          </div>
+          </div> */}
+        </TabsContent>
+
+        {/* Groups Tab */}
+        <TabsContent value="groups">
+          <ActivityList
+            activities={activities}
+            setActivities={setActivities}
+            addActivity={addActivity}
+            onSave={saveActivityPoints}
+            filterGroups={filterGroups}
+          />
         </TabsContent>
       </Tabs>
     </main>
