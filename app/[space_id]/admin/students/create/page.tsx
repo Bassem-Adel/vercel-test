@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { Group } from "@/lib/db/schema"
+import { Group, User } from "@/lib/db/schema"
 
 export default function CreateStudentPage() {
     const params = useParams()
@@ -16,7 +16,9 @@ export default function CreateStudentPage() {
     const [dob, setDob] = useState("")
     const [gender, setGender] = useState("male")
     const [groupId, setGroupId] = useState("")
+    const [mentorId, setMentorId] = useState("")
     const [groups, setGroups] = useState<Group[]>([])
+    const [users, setUsers] = useState<User[]>([])
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [imagePreview, setImagePreview] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
@@ -29,7 +31,12 @@ export default function CreateStudentPage() {
             .then(res => res.json())
             .then(setGroups)
             .catch(() => setGroups([]))
+        fetch(`/api/users?spaceId=${spaceId}`)
+            .then(res => res.json())
+            .then(setUsers)
+            .catch(() => setUsers([]))
     }, [spaceId])
+
 
     // Handle file selection
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -55,6 +62,14 @@ export default function CreateStudentPage() {
         return publicUrl
     }
 
+    const goBack = () => {
+        if (window.history.length > 1) {
+            router.back() // navigates to the previous page in browser history
+        } else {
+            router.push(`/${spaceId}/admin/students`) // fallback if there's no history
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
@@ -68,11 +83,11 @@ export default function CreateStudentPage() {
             const res = await fetch(`/api/students`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, dob, gender, groupId, imagePath, spaceId }),
+                body: JSON.stringify({ name, dob, gender, groupId, mentorId, imagePath, spaceId }),
             })
 
             if (res.ok) {
-                router.push(`/${spaceId}/admin/students`)
+                goBack()
             } else {
                 const errorData = await res.json().catch(() => ({}))
                 setError(errorData.message || "Failed to create student")
@@ -135,6 +150,19 @@ export default function CreateStudentPage() {
                             </SelectContent>
                         </Select>
                     </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="mentor">Mentor</Label>
+                        <Select value={mentorId} onValueChange={setMentorId}>
+                            <SelectTrigger id="mentor">
+                                <SelectValue placeholder="Select mentor" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {users.map(user => (
+                                    <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="imageFile">Image</Label>
@@ -152,9 +180,19 @@ export default function CreateStudentPage() {
                         />
                     )}
                 </div>
-                <Button type="submit" disabled={loading}>
-                    {loading ? "Creating..." : "Create Student"}
-                </Button>
+                <div className="flex items-center justify-between gap-4">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={goBack}
+                        disabled={loading}
+                    >
+                        Cancel
+                    </Button>
+                    <Button type="submit" disabled={loading}>
+                        {loading ? "Creating..." : "Create Student"}
+                    </Button>
+                </div>
             </form>
         </main>
     )

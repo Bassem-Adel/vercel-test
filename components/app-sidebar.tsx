@@ -137,8 +137,8 @@ function getSidebarData(spaceId?: string, user?: User) {
       // ],
     },
     {
-      title: "Attendance",
-      url: spaceId ? `/${spaceId}/admin/attendance` : "#",
+      title: "Follow Up",
+      url: spaceId ? `/${spaceId}/admin/followup` : "#",
       icon: CalendarCheck,
       // icon: Settings2,
     },

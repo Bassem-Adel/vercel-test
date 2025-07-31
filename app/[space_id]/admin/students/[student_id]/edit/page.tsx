@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { Group, Student } from "@/lib/db/schema"
+import { Group, Student, User } from "@/lib/db/schema"
 
 export default function EditStudentPage() {
     const params = useParams()
@@ -17,8 +17,11 @@ export default function EditStudentPage() {
     const [name, setName] = useState("")
     const [dob, setDob] = useState("")
     const [gender, setGender] = useState("male")
+    const [embedding, setEmbedding] = useState<string | null>(null)
     const [groupId, setGroupId] = useState("")
+    const [mentorId, setMentorId] = useState("")
     const [groups, setGroups] = useState<Group[]>([])
+    const [users, setUsers] = useState<User[]>([])
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [imagePreview, setImagePreview] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
@@ -34,16 +37,20 @@ export default function EditStudentPage() {
         Promise.all([
             fetch(`/api/students?spaceId=${spaceId}&studentId=${studentId}`).then(res => res.json()),
             fetch(`/api/groups?spaceId=${spaceId}`).then(res => res.json()),
+            fetch(`/api/users?spaceId=${spaceId}`).then(res => res.json()),
         ])
-            .then(([studentData, groupsData]) => {
+            .then(([studentData, groupsData, usersData]) => {
                 setName(studentData.name)
                 setDob(studentData.dob)
+                setEmbedding(studentData.embedding)
                 setGender(studentData.gender)
                 setGroupId(studentData.groupId)
+                setMentorId(studentData.mentorId)
                 setImagePreview(studentData.imagePath)
                 setGroups(groupsData)
+                setUsers(usersData)
             })
-            .catch(() => setError("Failed to load student or groups"))
+            .catch(() => setError("Failed to load student or groups or users"))
             .finally(() => setLoading(false))
     }, [spaceId, studentId])
 
@@ -69,6 +76,14 @@ export default function EditStudentPage() {
         return publicUrl
     }
 
+    const goBack = () => {
+        if (window.history.length > 1) {
+            router.back() // navigates to the previous page in browser history
+        } else {
+            router.push(`/${spaceId}/admin/students`) // fallback if there's no history
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
@@ -83,11 +98,11 @@ export default function EditStudentPage() {
             const res = await fetch(`/api/students`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id: studentId, name, dob, gender, groupId, imagePath, spaceId }),
+                body: JSON.stringify({ id: studentId, name, dob, gender, groupId, mentorId, embedding, imagePath, spaceId }),
             })
 
             if (res.ok) {
-                router.push(`/${spaceId}/admin/students`)
+                goBack()
             } else {
                 const errorData = await res.json().catch(() => ({}))
                 setError(errorData.message || "Failed to update student")
@@ -152,6 +167,19 @@ export default function EditStudentPage() {
                                 </SelectContent>
                             </Select>
                         </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="mentor">Mentor</Label>
+                            <Select value={mentorId} onValueChange={setMentorId}>
+                                <SelectTrigger id="mentor">
+                                    <SelectValue placeholder="Select mentor" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {users.map(user => (
+                                        <SelectItem key={user.id} value={user.id}>{user.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="imageFile">Image</Label>
@@ -169,9 +197,19 @@ export default function EditStudentPage() {
                             />
                         )}
                     </div>
-                    <Button type="submit" disabled={loading}>
-                        {loading ? "Updating..." : "Update Student"}
-                    </Button>
+                    <div className="flex items-center justify-between gap-4">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={goBack}
+                            disabled={loading}
+                        >
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={loading}>
+                            {loading ? "Updating..." : "Update Student"}
+                        </Button>
+                    </div>
                 </form>
             )}
         </main>

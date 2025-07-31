@@ -6,10 +6,9 @@ export interface Space {
   }
   
 export interface User {
-    id: number;
+    id: string;
     name: string;
     email: string;
-    updatedAt: Date | null;
   }
 
 export interface ProfileSpace {
@@ -24,6 +23,7 @@ export interface Student {
   imagePath: string;
   embedding: string;
   gender: string;
+  mentorId: string;
   groupId: string;
   spaceId: string;
 }

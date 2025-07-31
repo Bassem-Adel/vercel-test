@@ -33,6 +33,7 @@ export async function GET(request: Request) {
             embedding: student.embedding,
             gender: student.gender,
             groupId: student.group_id,
+            mentorId: student.mentor_id,
             // spaceId: student.space_id,
         }))
         // Optionally remove space_id property:
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
     try {
         const supabase = await createClient()
         const body = await request.json()
-        const { id, name, dob, imagePath, embedding, groupId, spaceId } = body
+        const { id, name, dob, gender, imagePath, embedding, groupId, mentorId, spaceId } = body
 
         if (!name || !spaceId) {
             return Response.json({ message: 'Missing required fields' }, { status: 400 })
@@ -59,10 +60,12 @@ export async function POST(request: Request) {
             .from('students')
             .insert([{
                 'name': name,
+                'gender': gender,
                 'dob': dob,
                 'image_path': imagePath,
                 'embedding': embedding,
                 'group_id': groupId,
+                'mentor_id': mentorId,
                 'space_id': spaceId, // Include space_id
             }])
 
@@ -82,7 +85,7 @@ export async function PUT(request: Request) {
     try {
         const supabase = await createClient()
         const body = await request.json()
-        const { id, name, dob, imagePath, embedding, groupId, spaceId } = body
+        const { id, name, dob, gender, imagePath, embedding, groupId, mentorId, spaceId } = body
 
         if (!id || !name || !spaceId) {
             return Response.json({ message: 'Missing required fields' }, { status: 400 })
@@ -93,9 +96,11 @@ export async function PUT(request: Request) {
             .update({
                 'name': name,
                 'dob': dob,
+                'gender': gender,
                 'image_path': imagePath,
                 'embedding': embedding,
                 'group_id': groupId,
+                'mentor_id': mentorId,
                 'space_id': spaceId,
             })
             .eq('id', id)

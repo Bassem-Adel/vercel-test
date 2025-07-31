@@ -127,9 +127,9 @@ const AttendanceTab: React.FC = () => {
 
     return (
         <main className="max-w-screen-xl mx-auto px-4 py-8">
-            <h1 className="text-2xl font-bold mb-4">Attendance Management</h1>
+            <h1 className="text-2xl font-bold mb-4">Follow Up</h1>
             <div className="flex flex-col md:flex-row gap-4 mb-4">
-                <div className="flex-1">
+                <div className="flex-1 space-y-2">
                     <Label>Date</Label>
                     <Input
                         type="date"
@@ -141,7 +141,7 @@ const AttendanceTab: React.FC = () => {
                         }}
                     />
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 space-y-2">
                     <Label>Group</Label>
                     <Select
                         value={selectedGroupId ?? "all"}
@@ -160,7 +160,7 @@ const AttendanceTab: React.FC = () => {
                         </SelectContent>
                     </Select>
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 space-y-2">
                     <Label>Search by Name</Label>
                     <Input
                         placeholder="Search by Name"
