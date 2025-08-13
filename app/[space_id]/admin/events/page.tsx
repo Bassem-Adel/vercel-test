@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Checkbox } from "@/components/ui/checkbox"
 import { Event, EventType } from "@/lib/db/schema"
 import { Info, Pencil, Trash2, Plus, Filter } from "lucide-react"
+import { EventTypeIconOptions } from "@/lib/utils"
 
 export default function EventsPage() {
   const router = useRouter()
@@ -75,6 +76,16 @@ export default function EventsPage() {
     return selectedEventTypes.includes(event.eventTypeId)
   })
 
+
+  filteredEvents.sort((a, b) => {
+    if (a.startDate == null && b.startDate == null) return 0;
+    if (a.startDate == null) return 1;  // If a.startDate is null, put b first
+    if (b.startDate == null) return -1; // If b.startDate is null, put a first
+
+    // If both startDate values are present, compare them
+    return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
+  });
+
   if (loading) return <div>Loading...</div>
   if (error) return <div className="text-red-500">{error}</div>
 
@@ -101,49 +112,57 @@ export default function EventsPage() {
         </div>
       </div>
       <ul>
-        {filteredEvents.map(event => (
-          <li key={event.id} className="flex justify-between items-center border-b py-2">
-            <div>
-              <p className="font-bold">{event.name}</p>
-              <p className="text-sm text-gray-500">{event.startDate} - {event.endDate}</p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-1"
-                title="Info"
-                onClick={() => router.push(`/${spaceId}/admin/events/${event.id}`)}
-              >
-                <Info className="h-4 w-4" />
-                <span className="hidden sm:inline">Details</span>
-              </Button>
+        {filteredEvents.map(event => {
+          const eventType = eventTypes.find(et => et.id === event.eventTypeId)
+          const Icon = EventTypeIconOptions[eventType?.icon ?? "help"] // Fallback to "help" icon
+          return (
+            <li key={event.id} className="flex justify-between items-center border-b py-2">
+              <div className="flex items-center gap-2">
+                <Icon className="h-8 w-8 text-gray-500" /> {/* Render the icon */}
+                <div>
+                  <p className="font-bold">{event.name}</p>
+                  <p className="text-sm text-gray-500">{event.startDate} - {event.endDate}</p>
+                </div>
+              </div>
 
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-1"
-                title="Edit"
-                onClick={() => router.push(`/${spaceId}/admin/events/${event.id}/edit`)}
-              >
-                <Pencil className="h-4 w-4" />
-                <span className="hidden sm:inline">Edit</span>
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1"
+                  title="Info"
+                  onClick={() => router.push(`/${spaceId}/admin/events/${event.id}`)}
+                >
+                  <Info className="h-4 w-4" />
+                  <span className="hidden sm:inline">Details</span>
+                </Button>
 
-              <Button
-                variant="destructive"
-                size="sm"
-                className="flex items-center gap-1"
-                title="Delete"
-                onClick={() => { setDeleteId(event.id); setDeleteDialogOpen(true) }}
-              // disabled={deleting}
-              >
-                <Trash2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Delete</span>
-              </Button>
-            </div>
-          </li>
-        ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1"
+                  title="Edit"
+                  onClick={() => router.push(`/${spaceId}/admin/events/${event.id}/edit`)}
+                >
+                  <Pencil className="h-4 w-4" />
+                  <span className="hidden sm:inline">Edit</span>
+                </Button>
+
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="flex items-center gap-1"
+                  title="Delete"
+                  onClick={() => { setDeleteId(event.id); setDeleteDialogOpen(true) }}
+                // disabled={deleting}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Delete</span>
+                </Button>
+              </div>
+            </li>
+          )
+        })}
       </ul>
 
       {/* Event Filter Modal */}

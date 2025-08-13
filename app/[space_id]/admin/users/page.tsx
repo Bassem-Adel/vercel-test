@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useParams } from "next/navigation"
 import { Plus } from "lucide-react"
+import { User } from "@/lib/db/schema"
 
 export default function UsersPage() {
     const params = useParams()
     const spaceId = params?.space_id as string
 
-    const [users, setUsers] = useState<any[]>([])
+    const [users, setUsers] = useState<User[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [addUserModalOpen, setAddUserModalOpen] = useState(false)

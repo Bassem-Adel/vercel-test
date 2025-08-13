@@ -19,11 +19,11 @@ interface Props {
 export const StudentList = ({ student, getGroupName, currentEventType, event, attendance, onAttendanceChange }: Props) => {
     const [extraPointsDialog, setExtraPointsDialog] = useState<boolean>(false)
     return (
-        <div key={student.id} className="flex items-center justify-between p-4 border-b">
+        <div key={student.id} className="flex items-center justify-between p-3 border-b">
             <div className="flex gap-4">
                 <img
                     src={student.imagePath || `https://ui-avatars.com/api/?name=${student.name}&background=random`}
-                    className="h-14 w-14 rounded-full"
+                    className="h-18 w-18 rounded-lg object-cover"
                     alt={student.name}
                 />
                 <div>
